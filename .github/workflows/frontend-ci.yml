@@ -1,11 +1,47 @@
-name: Frontend CI
+name: Frontend Continuous Integration
+
 on:
-  push:
+  pull_request:
     branches: [ main ]
+  workflow_dispatch:
+
 jobs:
-  build:
+  lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - run: echo "Frontend CI test successful!"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+      - name: Install & Lint
+        run: |
+          cd frontend
+          npm install
+          # If you don't have lint scripts yet, this will fail. 
+          # You can add "lint": "echo 'No lint yet'" to your package.json
+          npm run lint 
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install & Test
+        run: |
+          cd frontend
+          npm install
+          npm test
+
+  build:
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker Image
+        run: |
+          cd frontend
+          docker build -t frontend-app:latest .
