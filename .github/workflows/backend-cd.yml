@@ -1,23 +1,18 @@
 name: Backend Continuous Deployment
-
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
       - name: Setup Minikube
         uses: medyagh/setup-minikube@master
-
       - name: Deploy Backend to Simulation Cluster
         run: |
           kubectl apply -f k8s/deployment.yaml
-          
-      - name: Verify Backend Service (For Rubric Screenshot)
+      - name: Verify Service (Capture for Rubric)
         run: |
           kubectl get svc -A

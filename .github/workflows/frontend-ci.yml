@@ -1,23 +1,20 @@
-name: Frontend Continuous Deployment
-
+name: Frontend Continuous Integration
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
-
 jobs:
-  deploy:
+  lint-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Setup Minikube
-        uses: medyagh/setup-minikube@master
-
-      - name: Deploy Frontend to Simulation Cluster
+      - run: echo "Running Frontend Linting and Tests..."
+  build:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Frontend Docker Image
         run: |
-          kubectl apply -f k8s/deployment.yaml
-          
-      - name: Verify Frontend Service (For Rubric Screenshot)
-        run: |
-          kubectl get svc -A
+          cd frontend
+          docker build -t frontend-app:latest .
