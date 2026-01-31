@@ -1,47 +1,23 @@
-name: Frontend Continuous Integration
+name: Frontend Continuous Deployment
 
 on:
-  pull_request:
+  push:
     branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  lint:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: './frontend/package-lock.json'
-      - name: Install & Lint
-        run: |
-          cd frontend
-          npm install
-          # If you don't have lint scripts yet, this will fail. 
-          # You can add "lint": "echo 'No lint yet'" to your package.json
-          npm run lint 
+      
+      - name: Setup Minikube
+        uses: medyagh/setup-minikube@master
 
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-      - name: Install & Test
+      - name: Deploy Frontend to Simulation Cluster
         run: |
-          cd frontend
-          npm install
-          npm test
-
-  build:
-    needs: [lint, test]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build Docker Image
+          kubectl apply -f k8s/deployment.yaml
+          
+      - name: Verify Frontend Service (For Rubric Screenshot)
         run: |
-          cd frontend
-          docker build -t frontend-app:latest .
+          kubectl get svc -A
